@@ -45,7 +45,7 @@
         h1 { font-size: 2rem; font-weight: 600; margin-bottom: 30px; background: linear-gradient(to right, #818cf8, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         h2 { font-size: 1.25rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 
-        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .menu-item {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -114,6 +114,10 @@
                 <div class="menu-item" onclick="addToCart('된장찌개', 9000)">
                     <span>된장찌개</span>
                     <div class="price">₩9,000</div>
+                </div>
+                <div class="menu-item" onclick="addToCart('짜장면', 8000)">
+                    <span>짜장면</span>
+                    <div class="price">₩8,000</div>
                 </div>
             </div>
             <div class="cart-section">

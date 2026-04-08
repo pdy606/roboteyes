@@ -20,6 +20,7 @@ class MenuEnum(str, Enum):
     DONKAS = "돈까스"
     KIMCHI = "김치찌개"
     DOENJANG = "된장찌개"
+    JJAJANG = "짜장면"
 
 class OrderItemRequest(BaseModel):
     menu_name: MenuEnum

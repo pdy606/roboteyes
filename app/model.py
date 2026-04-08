@@ -2,8 +2,8 @@ import os
 import time
 from ultralytics import YOLO
 
-# 우리 가게 기본 4종 메뉴 설정 (YOLO 모델의 클래스와 일치해야 함)
-MENU_LIST = ["제육볶음", "돈까스", "김치찌개", "된장찌개"]
+# 우리 가게 기본 5종 메뉴 설정 (YOLO 모델의 클래스와 일치해야 함)
+MENU_LIST = ["제육볶음", "돈까스", "김치찌개", "된장찌개", "짜장면"]
 
 class ModelManager:
     """
