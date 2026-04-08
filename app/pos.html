@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프리미엄 로봇 포스기</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-grad: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-blue: #3b82f6;
+            --neon-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+            background: var(--bg-grad); color: var(--text-main);
+            min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden;
+        }
+
+        header {
+            padding: 20px 40px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;
+        }
+        header h1 {
+            margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.5rem;
+            background: linear-gradient(90deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; flex-grow: 1;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 30px; backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        .panel-title span { color: #93c5fd; }
+
+        /* Menu Grid */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .menu-card {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s ease;
+            position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        .menu-card:hover { background: rgba(255, 255, 255, 0.08); border-color: #60a5fa; transform: translateY(-2px); }
+        .menu-card .menu-name { font-size: 1.1rem; font-weight: 600; }
+        .menu-card .badge-overlay {
+            position: absolute; top: 10px; right: 10px; background: var(--neon-blue); color: white;
+            font-size: 0.8rem; width: 24px; height: 24px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; opacity: 0; transform: scale(0.5); transition: all 0.2s;
+        }
+        .menu-card.in-cart .badge-overlay { opacity: 1; transform: scale(1); }
+
+        /* Cart Section */
+        .cart-box {
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 20px; margin-bottom: 20px; min-height: 100px; display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;
+        }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .cart-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-small { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-small:hover { background: rgba(255,255,255,0.2); }
+
+        .table-select, .file-input, .text-input {
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
+            color: white; padding: 12px 16px; border-radius: 12px; width: 100%;
+            font-size: 1rem; margin-bottom: 20px; outline: none; box-sizing: border-box;
+        }
+        ::file-selector-button {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; margin-right: 15px;
+        }
+
+        button.primary-btn {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); color: white;
+            border: none; padding: 16px; border-radius: 14px; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); width: 100%; box-sizing: border-box;
+        }
+        button.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
+
+        /* Orders List */
+        .orders-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex-grow: 1; padding-right: 5px; margin-bottom: 20px;}
+        .order-item { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9); border: 1px solid #38bdf8; color: white; padding: 15px 25px;
+            border-radius: 30px; transition: transform 0.4s; z-index: 1000;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        .robot-btn {
+            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399;
+            padding: 16px 20px; border-radius: 14px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s; white-space: nowrap;
+        }
+        .robot-btn:hover { background: rgba(16, 185, 129, 0.2); }
+        
+        /* MLOps Section */
+        .mlops-box {
+            background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🤖 로봇 POS & 뇌 제어실 </h1>
+        <div style="color: var(--text-muted);">AI 순차 배분 엔진 활성화</div>
+    </header>
+
+    <div class="dashboard">
+        
+        <!-- 왼쪽: 주문 패널 -->
+        <div class="glass-panel">
+            <div class="panel-title"><span>🛒</span> 메뉴 고르기 (장바구니)</div>
+
+            <div class="menu-grid">
+                <div class="menu-card" id="card-제육볶음" onclick="updateCart('제육볶음', 1)">
+                    <div class="badge-overlay" id="badge-제육볶음">0</div>
+                    <div class="menu-name">제육볶음</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">매콤달콤 밥도둑</div>
+                </div>
+                <div class="menu-card" id="card-돈까스" onclick="updateCart('돈까스', 1)">
+                    <div class="badge-overlay" id="badge-돈까스">0</div>
+                    <div class="menu-name">돈까스</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">바삭바삭 육즙가득</div>
+                </div>
+                <div class="menu-card" id="card-김치찌개" onclick="updateCart('김치찌개', 1)">
+                    <div class="badge-overlay" id="badge-김치찌개">0</div>
+                    <div class="menu-name">김치찌개</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">얼큰한 국물진수</div>
+                </div>
+                <div class="menu-card" id="card-된장찌개" onclick="updateCart('된장찌개', 1)">
+                    <div class="badge-overlay" id="badge-된장찌개">0</div>
+                    <div class="menu-name">된장찌개</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">구수한 할머니의 맛</div>
+                </div>
+            </div>
+
+            <div class="cart-box" id="cartBox">
+                <div style="color:var(--text-muted); text-align:center; padding-top:20px;">위에서 메뉴를 클릭해 담아주세요.</div>
+            </div>
+
+            <select class="table-select" id="tableSelect">
+                <option value="1">1번 테이블</option>
+                <option value="2">2번 테이블</option>
+                <option value="3">3번 테이블</option>
+                <option value="4">4번 테이블</option>
+                <option value="5">5번 테이블</option>
+                <option value="6">6번 테이블</option>
+            </select>
+
+            <button class="primary-btn" onclick="placeOrder()">
+                ✨ 장바구니 전체 주문 전송
+            </button>
+            
+            <!-- MLOps 파트 추가 -->
+            <div class="mlops-box" style="margin-top: 25px;">
+                <div style="color:#fbbf24; font-weight:600; margin-bottom:15px; font-size:1.1rem;">🛠️ 사장님 사진 수집기 (추가 학습용)</div>
+                <input type="text" id="mlopsMenuInput" class="text-input" placeholder="새 메뉴 이름 (예: 냉면)" style="margin-bottom:10px;">
+                <input type="file" id="mlopsImage" accept="image/*" class="file-input" style="margin-bottom:10px;">
+                <button class="primary-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="uploadTrainingImage()">데이터 업로드 + 재학습</button>
+            </div>
+            
+        </div>
+
+        <!-- 오른쪽: 주방 현황 로봇 제어 패널 -->
+        <div class="glass-panel" style="max-height: 85vh;">
+            <div class="panel-title"><span>📋</span> 주방 현황 및 로봇 제어</div>
+            
+            <div class="orders-list" id="ordersList"></div>
+
+            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 18px; padding: 20px;">
+                <div style="color:#34d399; font-weight:600; margin-bottom:10px;">🤖 로봇 눈 (트레이 위 음식 스캔)</div>
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">진짜 사진을 올리거나 파일 탐색창을 비운 채 출발을 누르면 AI가 무작위로 추론해 테스트합니다.</div>
+                
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="file" id="robotImage" accept="image/*" class="file-input" style="margin-bottom:0; flex:1;">
+                    <button class="robot-btn" onclick="simulateRobotServe()">🚀 배달 출발!</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast">알림</div>
+
+    <script>
+        let cart = {}; 
+        
+        function updateCart(menuName, delta, event) {
+            if(event) event.stopPropagation();
+            if(!cart[menuName]) cart[menuName] = 0;
+            cart[menuName] += delta;
+            if(cart[menuName] <= 0) delete cart[menuName];
+            renderCart();
+        }
+
+        function renderCart() {
+            ["제육볶음", "돈까스", "김치찌개", "된장찌개"].forEach(menu => {
+                const card = document.getElementById(`card-${menu}`);
+                const badge = document.getElementById(`badge-${menu}`);
+                if(cart[menu]) {
+                    card.classList.add('in-cart'); badge.innerText = cart[menu];
+                } else {
+                    card.classList.remove('in-cart');
+                }
+            });
+
+            const cartBox = document.getElementById('cartBox');
+            if(Object.keys(cart).length === 0) {
+                cartBox.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top:20px;">메뉴를 클릭해 담아주세요.</div>';
+                return;
+            }
+
+            let html = '';
+            for(const [menu, qty] of Object.entries(cart)) {
+                html += `
+                <div class="cart-item">
+                    <div style="font-weight:600;">🍣 ${menu}</div>
+                    <div class="cart-controls">
+                        <button class="btn-small" onclick="updateCart('${menu}', -1, event)">-</button>
+                        <span>${qty}개</span>
+                        <button class="btn-small" onclick="updateCart('${menu}', 1, event)">+</button>
+                    </div>
+                </div>`;
+            }
+            cartBox.innerHTML = html;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function placeOrder() {
+            if(Object.keys(cart).length === 0) return showToast("앗! 장바구니가 비어 있습니다.");
+            
+            const table = parseInt(document.getElementById('tableSelect').value);
+            const ordersPayload = Object.entries(cart).map(([menu, qty]) => { return { menu_name: menu, quantity: qty }; });
+
+            try {
+                const res = await fetch('/order', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ table_number: table, orders: ordersPayload })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    showToast(data.message); cart = {}; renderCart(); fetchOrders();
+                } else { showToast(`❌ 에러: ${JSON.stringify(data.detail)}`); }
+            } catch(e) { showToast("통신 에러."); }
+        }
+
+        async function fetchOrders() {
+            try {
+                const res = await fetch('/orders');
+                const data = await res.json();
+                const listEl = document.getElementById('ordersList');
+                
+                if(!data.pending_orders || data.pending_orders.length === 0) {
+                    listEl.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:30px;">주방 대기열이 비어있습니다.</div>';
+                    return;
+                }
+                listEl.innerHTML = '';
+                data.pending_orders.forEach(order => {
+                    const item = document.createElement('div'); item.className = 'order-item';
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-weight: 700; font-size:1.1rem; margin-bottom:4px;">${order.menu_name}</div>
+                            <div style="color:var(--text-muted); font-size:0.85rem;">[주문 누적] 빠른 배차 대기중</div>
+                        </div>
+                        <div style="font-size:1.4rem; font-weight:800; color:#60a5fa;">T${order.table_number}</div>`;
+                    listEl.appendChild(item);
+                });
+            } catch(e) { }
+        }
+
+        // --- 실전 이미지 파일 업로드 액션 (로봇용) ---
+        async function simulateRobotServe() {
+            const fileInput = document.getElementById('robotImage');
+            let file = fileInput.files[0];
+            
+            if (!file) {
+                // 첨부 안하면 랜덤 픽 가짜 깡통 파일 생성
+                file = new File(["dummy"], "simulation_test.jpg", {type: "image/jpeg"});
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            showToast("🤖 로봇: 사진을 찍고 분석을 시작했습니다...");
+            
+            try {
+                const res = await fetch('/serve', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(res.ok) {
+                    alert(`[AI 분류 결과: ${data.ai_vision_result}]\n\n${data.message}`);
+                    fileInput.value = ""; // 초기화
+                    fetchOrders();
+                }
+            } catch(e) { showToast("통신 에러."); }
+        }
+        
+        // --- 사장님 데이터 수집기 (MLOps) ---
+        async function uploadTrainingImage() {
+            const menuInput = document.getElementById('mlopsMenuInput');
+            const fileInput = document.getElementById('mlopsImage');
+            
+            const menuName = menuInput.value.trim();
+            const file = fileInput.files[0];
+            
+            if(!menuName) return showToast("새 메뉴 이름을 입력하세요!");
+            if(!file) return showToast("AI에게 학습시킬 사진을 첨부하세요!");
+            
+            const formData = new FormData();
+            formData.append('menu_name', menuName);
+            formData.append('file', file);
+            
+            try {
+                // 1. 데이터 저장 API
+                const resUpload = await fetch('/upload', { method: 'POST', body: formData });
+                if(resUpload.ok) {
+                    showToast(`✅ [${menuName}] 데이터 수집 완료. 딥러닝 망을 재학습시킵니다!`);
+                    menuInput.value = ""; fileInput.value = "";
+                    
+                    // 2. 학습 파이프라인 트리거 API
+                    await fetch('/train', { method: 'POST' });
+                }
+            } catch(e) { showToast("통신 에러."); }
+        }
+
+        setInterval(fetchOrders, 2000); fetchOrders();
+    </script>
+</body>
+</html>
