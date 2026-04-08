@@ -61,6 +61,11 @@ async def create_order(request: CreateOrderRequest):
     """
     if request.table_number < 1 or request.table_number > 6:
         raise HTTPException(status_code=400, detail="사장님, 우리가게 테이블은 1번부터 6번까지만 있습니다!")
+        
+    # [추가 구문] 테이블 중복 주문 방지 (음식이 다 나갈 때까지 대기)
+    pending_orders = order_manager.get_pending_orders()
+    if any(order.table_number == request.table_number for order in pending_orders):
+        raise HTTPException(status_code=400, detail=f"앗! {request.table_number}번 테이블은 아직 서빙되지 않은 요리가 있습니다. 모든 서빙이 끝난 후 다시 지시해주세요!")
     
     total_added = 0
     # 장바구니에 담긴 메뉴별로 순회하며 내부 큐에 추가
