@@ -1,4 +1,4 @@
-# 1. 초경량 파이썬 베이스 이미지 사용
+﻿# 1. 초경량 파이썬 베이스 이미지 사용
 FROM python:3.10-slim
 
 # 2. 파이썬 환경 변수 설정 (바이트코드(.pyc) 생성 방지, 버퍼링 방지)
@@ -20,20 +20,25 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# 5. 실제 앱 소스코드 복사
+# 5. 소스 코드 및 학습 데이터 복사
 COPY ./app ./app
+COPY ./data ./data
 
-# 6. 보안을 위해 root 권한 대신 일반 유저(robot_user) 생성 및 모델/데이터 폴더 권한 부여
+# 필요한 각종 폴더 생성
+RUN mkdir -p data/uploads models runs
+
+# 6. Deployment 과정에서 자동 AI 학습 진행 (모델 가중치 best.pt 구워넣기)
+RUN python app/train.py
+
+# 7. 보안을 위해 일반 유저(robot_user) 생성 및 권한 부여
 RUN addgroup --system robotgroup && \
     adduser --system --group robot_user && \
-    mkdir -p data/uploads models && \
     chown -R robot_user:robotgroup /app
 
-# 일반 유저 사용
 USER robot_user
 
-# 7. 포트 개방
+# 8. 포트 개방
 EXPOSE 8000
 
-# 8. 컨테이너 시작 시 실행될 명령어 설정
+# 9. 서버 실행
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
