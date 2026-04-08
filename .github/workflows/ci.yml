@@ -32,3 +32,26 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot-mlops-eye:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot-mlops-eye:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot-mlops-eye:buildcache,mode=max
+
+  deploy:
+    needs: build-and-push-image
+    runs-on: self-hosted
+    steps:
+      - name: 🔑 Log in to Docker Hub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📥 Pull latest image
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/robot-mlops-eye:latest
+
+      - name: 🛑 Stop and remove existing container
+        run: |
+          $containerName = "robot-mlops-eye"
+          if (docker ps -a --filter "name=$containerName" --format "{{.Names}}" | Select-String -Exactly $containerName) {
+            Write-Host "Stopping and removing existing container: $containerName"
+            docker stop $containerName
+            docker rm $containerName
+          }
+        shell: powershell
+
+      - name: 🚀 Run new container
+        run: docker run -d --name robot-mlops-eye -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/robot-mlops-eye:latest
