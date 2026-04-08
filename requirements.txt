@@ -1,3 +1,10 @@
 fastapi
 uvicorn
 python-multipart
+# CPU-only torch optimization for faster deployment
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+ultralytics
+numpy
+Pillow

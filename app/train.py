@@ -1,35 +1,45 @@
-import time
 import os
-import datetime
+import shutil
+from ultralytics import YOLO
 
 def train_model(data_dir: str, model_dir: str) -> str:
     """
-    모인 데이터(data_dir)를 읽어와 딥러닝 모델을 파인튜닝하고,
-    결과물을 model_dir 에 저장하는 간단한 스크립트입니다.
+    모인 데이터(data_dir)를 읽어와 YOLOv8 분류 모델을 학습하고,
+    결과 가중치를 model_dir 에 저장합니다.
     """
-    print("🚀 [학습 로직 시작] 사장님이 올려주신 사진들을 모아서 학습을 준비합니다...")
+    print("🚀 [학습 로직 시작] 사장님이 준비하신 사진들로 YOLOv8 학습을 시작합니다 (CPU 전용)...")
     
-    # 데이터 폴더 스캔 (예시 출력용)
-    menus = [d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))]
-    print(f"👀 발견된 메뉴들: {menus}")
+    # 1. 초기 모델 로드 (Pre-trained YOLOv8 Nano Classification)
+    model = YOLO("yolov8n-cls.pt")
     
-    # 딥러닝 프레임워크(PyTorch 등) 모델 학습을 가정
-    for i in range(1, 4):
-        print(f" ⏳ 학습 중... (Epoch {i}/3)")
-        time.sleep(2) # 무거운 연산을 한다고 가정
+    # 2. 학습 실행
+    # data: 클래스별 폴더가 들어있는 최상위 경로 (data/uploads)
+    # epochs: 짧게(5회) 설정하여 빠른 피드백 제공
+    # imgsz: 이미지 크기 224
+    # device: CPU 강제 사용
+    print(f"📁 [데이터 경로 확인] {os.path.abspath(data_dir)}")
     
-    print("✨ [학습 완료] 서빙 로봇이 새로운 메뉴의 특징을 모두 파악했습니다!")
+    results = model.train(
+        data=data_dir, 
+        epochs=5, 
+        imgsz=224, 
+        device='cpu', 
+        project='runs', 
+        name='classify_train', 
+        exist_ok=True,
+        verbose=True
+    )
     
-    # 학습이 끝났으니 새 모델 파일을 만듭니다 (실제론 torch.save 등)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    new_model_filename = f"model_v{timestamp}.pt"
-    new_model_path = os.path.join(model_dir, new_model_filename)
+    # 3. 학습 결과 파일(best.pt) 확인 및 복사
+    best_pt_path = os.path.join("runs", "classify_train", "weights", "best.pt")
     
-    # 모의 파일 생성
-    with open(new_model_path, "w") as f:
-        f.write("이 파일은 새롭게 파인튜닝 된 인공지능 모델 가중치입니다.")
-        
-    print(f"💾 [모델 파일 저장] 경로: {new_model_path}")
+    if os.path.exists(best_pt_path):
+        target_path = os.path.join(model_dir, "best.pt")
+        os.makedirs(model_dir, exist_ok=True)
+        shutil.copy(best_pt_path, target_path)
+        print(f"✨ [학습 완료] YOLOv8이 메뉴 인식을 마스터했습니다!")
+        print(f"💾 [모델 업데이트 완료] 최신 가중치가 {target_path} 에 저장되었습니다.")
+        return target_path
     
-    # 새로운 모델의 경로를 반환해야 메인 서버가 이걸 보고 업데이트를 칩니다.
-    return new_model_path
+    print("❌ [오류] 학습 결과 파일(best.pt)을 찾을 수 없습니다. 학습이 정상적으로 완료되지 않았을 가능성이 있습니다.")
+    return None

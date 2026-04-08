@@ -8,8 +8,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 3. 작업 디렉토리 설정
 WORKDIR /app
 
-# 4. 의존성 파일만 먼저 복사하여 패키지 설치 (도커 레이어 캐싱 극대화)
+# 4. 의존성 설치 및 시스템 라이브러리 추가 (OpenCV/Ultralytics 필수 요소)
 COPY requirements.txt .
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    libxcb1 \
+    libx11-6 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 

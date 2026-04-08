@@ -99,23 +99,3 @@ async def serve_food(file: UploadFile = File(..., description="로봇이 배달 
         "message": f"🤖 [{predicted_menu}] 발견! 제일 먼저 시켰던 {target_order.table_number}번 테이블로 출발합니다!!"
     }
 
-# ==================== [ MLOps 모듈 ] ====================
-
-@app.post("/upload", summary="새 메뉴 사진 데이터 업로드", tags=["3. MLOps"])
-async def upload_menu_image(menu_name: str = Form(...), file: UploadFile = File(...)):
-    menu_dir = os.path.join(DATA_DIR, menu_name)
-    os.makedirs(menu_dir, exist_ok=True)
-    file_path = os.path.join(menu_dir, file.filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"message": f"[{menu_name}] AI 학습용 데이터가 업로드 됨.", "file_path": file_path}
-
-def run_training_and_reload():
-    new_model_path = train_model(DATA_DIR, MODEL_DIR)
-    if new_model_path:
-        model_manager.load_model(new_model_path)
-
-@app.post("/train", summary="로봇 추가 재학습", tags=["3. MLOps"])
-async def start_training(background_tasks: BackgroundTasks):
-    background_tasks.add_task(run_training_and_reload)
-    return {"message": "로봇 백그라운드 재학습 진행. (무중단)"}
