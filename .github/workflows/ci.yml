@@ -46,7 +46,7 @@ jobs:
       - name: 🛑 Stop and remove existing container
         run: |
           $containerName = "robot-mlops-eye"
-          if (docker ps -a --filter "name=$containerName" --format "{{.Names}}" | Select-String -Exactly $containerName) {
+          if (docker ps -a --filter "name=$containerName" --format "{{.Names}}" | Select-String -Pattern "^$containerName$") {
             Write-Host "Stopping and removing existing container: $containerName"
             docker stop $containerName
             docker rm $containerName
